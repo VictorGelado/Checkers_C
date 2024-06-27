@@ -16,7 +16,7 @@ int checkWinner(int ch[CHECKERSLEN][CHECKERSLEN], int *winner) {
     int qtdX = 0;
      
     for (c = 0; c < CHECKERSLEN; c++) {
-        for (j = 0; c < CHECKERSLEN; j++) {
+        for (j = 0; j < CHECKERSLEN; j++) {
             if (ch[c][j] == 1) qtdX++;
             else if (ch[c][j] == 2) qtdO++;
         }
@@ -92,18 +92,32 @@ int capturePiece(int cp, int jp, int cp2, int jp2, int ch[CHECKERSLEN][CHECKERSL
 int checkCaptures(int cp, int jp, int ch[CHECKERSLEN][CHECKERSLEN]){
     // Verifica se existe como o jogador fazer mais uma jogada
     
-    // c > 0
+    // Verificar se existe uma peça ocupando a posição cp+2 e jp+2
+    if (cp >= 2 && jp <= 5) {
+        if (ch[cp-2][jp+2] != 0) {
+            return 0;
+        }
+    } else if (cp >= 2 && jp >= 2) {
+        if (ch[cp-2][jp-2] != 0) {
+            return 0;
+        }
+    } else if (cp <= 5 && jp <= 5) {
+        if (ch[cp+2][jp+2] != 0) {
+            return 0;
+        }
+    } else if (cp <= 5 && jp >= 2) {
+        if (ch[cp+2][jp-2] != 0) {
+            return 0;
+        }
+    }
+
+    // cp+1
     int idx1[2] = {cp-1, jp-1};  // j > 0
-    int idx2[2] = {cp-1, jp+1}; // j < 7
-    
-    // c < 7 
-    int idx3[2] = {cp+1, jp+1}; // j < 7
-    int idx4[2] = {cp+1, jp-1}; // j > 0
-    
-    //Verificar se existe uma peca ocupando a posicao cp+2 e jp+2
-    
-    //cp+1 == 0
-    // Verificando se a posicao e menor que o primeiro indice (0)
+    int idx2[2] = {cp-1, jp+1};  // j < 7
+    int idx3[2] = {cp+1, jp+1};  // j < 7
+    int idx4[2] = {cp+1, jp-1};  // j > 0
+
+    // Verificando se a posição é maior ou igual ao primeiro índice (0)
     if (jp - 1 >= 0 && cp - 1 >= 0) {
         if ((ch[idx1[0]][idx1[1]] != ch[cp][jp] && ch[idx1[0]][idx1[1]] != 0)) {
             return 1;
@@ -131,10 +145,11 @@ int checkCaptures(int cp, int jp, int ch[CHECKERSLEN][CHECKERSLEN]){
     return 0;
 }
 
+
 int verifyValidMove(int cp, int jp, int cp2, int jp2, int ch[CHECKERSLEN][CHECKERSLEN]) {
     int validMove = 0;
     
-    if (cp < 0 || cp > CHECKERSLEN || jp < 0 || jp > CHECKERSLEN) return validMove;
+    if (cp < 0 || cp >= CHECKERSLEN || jp < 0 || jp >= CHECKERSLEN) return validMove;
 
     
     int cpF = cp - cp2;
@@ -188,7 +203,7 @@ void makeMove(int ch[CHECKERSLEN][CHECKERSLEN], int *whoseTurn) {
         // Posicao da peca a ser movida.
         
         displayCheckers(ch);
-        printf("Digite a linha e coluna da peça que você quer mover (separado por espaço): ");
+        printf("%c, digite a linha e coluna da peça que você quer mover (separado por espaço): ", *whoseTurn == 1? 'X': 'O');
         scanf("%d %d", &cp, &jp);
         
         cp--; jp--;
@@ -243,18 +258,7 @@ void fillCheckers(int ch[CHECKERSLEN][CHECKERSLEN]) {
             ch[c][j] = c > 4? 2: 1;
         }
     }
-    
-    ch[4][2] = 2;
-    ch[5][1] = 0;
 
-    /*for (c = 5; c < CHECKERSLEN; c++) {
-        if (c%2==0) j = 1;   
-        else j = 0; 
-        
-        for (j; j < CHECKERSLEN; j+=2) {
-            ch[c][j] = 2;
-        }
-    }*/
 }
 
 void gameloop() {
@@ -278,13 +282,24 @@ void gameloop() {
     int whoseTurn = winner;
     
     while (1) {
-        
         makeMove(checkers, &whoseTurn);
+        
+        if (checkWinner(checkers, &winner)) {
+            int con = 0;
+            
+            printf("Gostaria de jogar mais uma?\n[1] SIM.\n[2] NAO.\n");
+            
+            do {
+                scanf("%d", &con);
+            } while (con != 1 && con != 2);
+            
+            if (con == 2) break;
+            else {
+                whoseTurn = winner;
+                fillCheckers(checkers);
+            }
+        }
     }
-    
-    /*if (!checkWinner(checkers, &winner)) {
-            printf("\n");
-        }*/
 }
 
 
@@ -294,7 +309,7 @@ void gameloop() {
 
 
 
-
+salvei dia 27/06
 
 
 
