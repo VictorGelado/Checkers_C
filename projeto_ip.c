@@ -1,4 +1,5 @@
 // Para executar: gcc projeto_ip.c -o projeto_ip && ./projeto_ip
+// Grupo: Grupo12_U2
 
 #include <stdio.h>
 #include <stdlib.h>
