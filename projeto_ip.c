@@ -1,3 +1,5 @@
+// Para executar: gcc projeto_ip.c -o projeto_ip && ./projeto_ip
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -9,9 +11,10 @@
 
 #define CHECKERSLEN 8
 
+// Verifica se a maquina tem windows ou linux e define a funcao de Sleep (que pausa a execucao do codigo)
 #ifdef _WIN32
-void pauseExecution(int milliseconds) {
-    Sleep(milliseconds);
+void pauseExecution(int seconds) {
+    Sleep(milliseconds*1000);
 }
 #else
 void pauseExecution(int seconds) {
@@ -19,13 +22,13 @@ void pauseExecution(int seconds) {
 }
 #endif
 
-
-#define CHECKERSLEN 8
-
 void clear() {
-    // Função ANSI dedicada a limpeza do console.
-    
+    #ifdef _WIN32
+    system("cls");
+    #else
+    // ANSI Escape Sequence para limpar o console
     printf("\033[2J\033[H");
+    #endif
 }
 
 void resetCheckers(int ch[CHECKERSLEN][CHECKERSLEN]) {
@@ -69,6 +72,7 @@ int verifyValidMove(int cp, int jp, int cp2, int jp2, int ch[CHECKERSLEN][CHECKE
         previousSquareJ = jp-1;
     }
     
+    
     if (ch[cp][jp] == 2) {
         if (
             (cpF == 1 && jpF == 1 && ch[cp2][jp2] == 0 && cp > cp2) ||
@@ -89,16 +93,16 @@ int verifyValidMove(int cp, int jp, int cp2, int jp2, int ch[CHECKERSLEN][CHECKE
 }
 
 int canMovePiece(int cp, int jp, int ch[CHECKERSLEN][CHECKERSLEN], int whoseTurn) {
-    // Verifica se a peça selecionada pode ser movida pelo jogador atual (1 ou 2)
+    // Verifica se a peca selecionada pode ser movida pelo jogador atual (1 ou 2)
 
     int c, j;
 
-
+    // Caso a posicao esteja fora dos indices de CHECKERS ele retorna 0
     if (cp < 0 || cp >= CHECKERSLEN || jp < 0 || jp >= CHECKERSLEN) return 0;
 
     if (ch[cp][jp] != whoseTurn) return 0;
 
-    // Verifica se há movimentos válidos disponíveis para essa peça
+    // Verifica se ha movimentos validos disponiveis para essa peca
     for (c = 0; c < CHECKERSLEN; c++) {
         for (j = 0; j < CHECKERSLEN; j++) {
             if (verifyValidMove(cp, jp, c, j, ch)) {
@@ -112,6 +116,8 @@ int canMovePiece(int cp, int jp, int ch[CHECKERSLEN][CHECKERSLEN], int whoseTurn
 
 
 int checkWinner(int ch[CHECKERSLEN][CHECKERSLEN], int *winner, int whoseTurn) {
+    // Verifica se ha Vencedor, e executado a cada jogada
+    
     int c, j;
     
     int qtdO = 0;
@@ -122,6 +128,8 @@ int checkWinner(int ch[CHECKERSLEN][CHECKERSLEN], int *winner, int whoseTurn) {
      
     for (c = 0; c < CHECKERSLEN; c++) {
         for (j = 0; j < CHECKERSLEN; j++) {
+            // Verifica a quantidade de pecas e se alguma delas e possivel ser movida
+            
             if (ch[c][j] == 1) {
                 qtdX++;
 
@@ -138,6 +146,7 @@ int checkWinner(int ch[CHECKERSLEN][CHECKERSLEN], int *winner, int whoseTurn) {
         }
     }
 
+    // Teste de possibilidades, Verifica se alguem nao consegue mover as pecas e define um Vencedor
     if (xPossible == 0 && oPossible == 0 ||
         xPossible == 0 && oPossible > 0 && whoseTurn != 2 ||
         xPossible > 0 && oPossible == 0 && whoseTurn != 1
@@ -153,6 +162,7 @@ int checkWinner(int ch[CHECKERSLEN][CHECKERSLEN], int *winner, int whoseTurn) {
         return 1;
     }
 
+    // Caso seja possivel mover pecas
     if (qtdO > 0 && qtdX == 0) {
         *winner = 2;
         return 1;
@@ -168,7 +178,7 @@ int checkWinner(int ch[CHECKERSLEN][CHECKERSLEN], int *winner, int whoseTurn) {
 
 
 void displayCheckers(int ch[CHECKERSLEN][CHECKERSLEN]) {
-    // Exibe a dama e suas peças em suas determinadas posicoes.
+    // Exibe a dama e suas pecas em suas determinadas posicoes.
     
     int c, j;
     
@@ -193,6 +203,8 @@ void displayCheckers(int ch[CHECKERSLEN][CHECKERSLEN]) {
 }
 
 int capturePiece(int cp, int jp, int cp2, int jp2, int ch[CHECKERSLEN][CHECKERSLEN]) {
+    // Faz a captura da peca
+    
     int cpF = cp - cp2;
     int jpF = jp - jp2;
 
@@ -200,19 +212,18 @@ int capturePiece(int cp, int jp, int cp2, int jp2, int ch[CHECKERSLEN][CHECKERSL
         int midC = (cp + cp2) / 2;
         int midJ = (jp + jp2) / 2;
 
-        ch[midC][midJ] = 0; // Remove a peça capturada
+        ch[midC][midJ] = 0; // Remove a peca capturada
         return 1; // Indica que houve captura
     }
 
-    return 0; // Não houve captura
+    return 0; // Nao houve captura
 }
 
 
 int checkCaptures(int cp, int jp, int ch[CHECKERSLEN][CHECKERSLEN]) {
     int player = ch[cp][jp];
-    int forwardDir = (player == 1) ? 1 : -1; // Direção para frente do jogador
 
-    // Verifica as quatro possíveis posições de captura
+    // Verifica as quatro possiveis posicoes de captura
     if (cp >= 2 && jp >= 2 && ch[cp - 1][jp - 1] != 0 && ch[cp - 2][jp - 2] == 0)
         return 1;
     
@@ -229,12 +240,16 @@ int checkCaptures(int cp, int jp, int ch[CHECKERSLEN][CHECKERSLEN]) {
 }
 
 void canCapturePiece(int player, int c2, int j2,  int ch[CHECKERSLEN][CHECKERSLEN]) {
+    // Verifica se depois de uma jogada o jogador poderia ter capturado uma peca e nao capturou
+    
     int c, j;
 
     for (c = 0; c < CHECKERSLEN; c++) {
         for (j = 0; j < CHECKERSLEN; j++) {
             if (player == ch[c][j] && (c2 != c || j2 != j)) {
-                int v[4][4] = {
+                int v[4][4] = { 
+                    // Definicao das 4 posicoes em que poderia comer uma peca. +2 ou -2 � para onde a peca vai (tem q ser igual a 0)
+                    // -1 ou +1 � a peca que pode ser capturada tem q ser != 0 && != player
                     {c+1, j+1, c+2, j+2},
                     {c+1, j-1, c+2, j-2},
                     {c-1, j+1, c-2, j+2},
@@ -277,14 +292,14 @@ void makeMove(int ch[CHECKERSLEN][CHECKERSLEN], int *whoseTurn) {
     do {
         // Posicao da peca a ser movida.
         displayCheckers(ch);
-        printf("%c, digite a linha e coluna da peça que você quer mover (separado por espaço): ", *whoseTurn == 1? 'X': 'O');
+        printf("%c, digite a linha e coluna da peca que voce quer mover (separado por espaco): ", *whoseTurn == 1? 'X': 'O');
         scanf("%d %d", &cp, &jp);
         
         cp--; jp--;
         
         if (!canMovePiece(cp, jp, ch, *whoseTurn)) {
-            printf("A peça selecionada não pode ser movida. Escolha outra peça.\n");
-            pauseExecution(3); // Pausa por 3 segundos antes de mostrar o tabuleiro novamente
+            printf("A peca selecionada noo pode ser movida. Escolha outra peca.\n");
+            pauseExecution(2); // Pausa por 2 segundos antes de mostrar o tabuleiro novamente
         }
     } while (!canMovePiece(cp, jp, ch, *whoseTurn));
     
@@ -296,22 +311,24 @@ void makeMove(int ch[CHECKERSLEN][CHECKERSLEN], int *whoseTurn) {
             
             displayCheckers(ch);
             printf("Voce esta movendo a peca (%d, %d).\n", cp+1, jp+1);
-            printf("%c, digite a linha e coluna para onde você quer mover a peça (separado por espaço): ", *whoseTurn == 1? 'X': 'O');
+            printf("%c, digite a linha e coluna para onde voce quer mover a peca (separado por espaco): ", *whoseTurn == 1? 'X': 'O');
             scanf("%d %d", &cp2, &jp2);
             
             cp2--; jp2--;
         
         } while (!verifyValidMove(cp, jp, cp2, jp2, ch));
+        
+        // Verifica se houve captura
+        capturePieceBool = capturePiece(cp, jp, cp2, jp2, ch); 
+
+        // Caso nao tenha ocorrido captura, Verifica se havia a possibilida e assopra uma peca aleatoria caso haja mais de duas
+        if (!capturePieceBool) canCapturePiece(*whoseTurn, cp2, jp2, ch); 
 
         
         // Move a peca de lugar.
         ch[cp2][jp2] = ch[cp][jp];
         ch[cp][jp] = 0;      
-
         
-        capturePieceBool = capturePiece(cp, jp, cp2, jp2, ch);
-
-        if (!capturePieceBool) canCapturePiece(*whoseTurn, cp2, jp2, ch);
 
         displayCheckers(ch);
         
@@ -348,13 +365,13 @@ void fillCheckers(int ch[CHECKERSLEN][CHECKERSLEN]) {
 }
 
 void gameloop() {
-    // Instancia do checkers (dama), alem do laço de repeticao que mantem o jogo rodando.
+    // Instancia do checkers (dama), alem do laco de repeticao que mantem o jogo rodando.
     
     int checkers[CHECKERSLEN][CHECKERSLEN] = {
         {0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0}, 
         {0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0},
@@ -362,7 +379,6 @@ void gameloop() {
     };
     
     int winner = 1; // Vencedor anterior.
-    int newWinner = 0;
     
     fillCheckers(checkers);
     int whoseTurn = winner;
@@ -374,7 +390,7 @@ void gameloop() {
             int con = 0;
             
             if (winner == 0) {
-                printf("Deu empate!");
+                printf("Deu empate!\n");
                 winner = 1;
             }
             else printf("O vencedor foi o %c.\n", winner == 1? 'X': 'O');
